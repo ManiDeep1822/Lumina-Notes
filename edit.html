@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit Note | Lumina</title>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --primary: #6366f1;
+        --primary-dark: #4f46e5;
+        --bg: #f1f5f9;
+        --surface: rgba(255, 255, 255, 0.9);
+        --text-main: #0f172a;
+        --text-muted: #64748b;
+        --border: #e2e8f0;
+        --danger: #ef4444;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background: linear-gradient(135deg, #eef2ff, #f8fafc);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        color: var(--text-main);
+      }
+
+      .editor-card {
+        width: 100%;
+        max-width: 600px;
+        background: var(--surface);
+        padding: 2.5rem;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+      }
+
+      .header {
+        margin-bottom: 2rem;
+      }
+
+      .header h1 {
+        font-size: 1.5rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+      }
+
+      .header p {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+      }
+
+      form {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 1.75rem;
+      }
+
+      .form-group label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 0.75rem;
+      }
+
+      input,
+      textarea {
+        width: 100%;
+        padding: 1rem;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        font-size: 0.95rem;
+      }
+
+      input:focus,
+      textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+      }
+
+      textarea {
+        min-height: 200px;
+        resize: none;
+      }
+
+      .actions {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+
+      .btn-primary {
+        flex: 1;
+        padding: 1rem;
+        border-radius: 12px;
+        border: none;
+        background: var(--primary);
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s ease;
+      }
+
+      .btn-primary:hover {
+        background: var(--primary-dark);
+      }
+
+      .btn-cancel {
+        flex: 1;
+        padding: 1rem;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: white;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .btn-cancel:hover {
+        background: #f8fafc;
+      }
+
+      #status {
+        margin-top: 1.5rem;
+        font-size: 0.9rem;
+        text-align: center;
+        color: var(--primary);
+      }
+
+      /* ============================= */
+      /* RESPONSIVE DESIGN */
+      /* ============================= */
+
+      /* Tablet */
+      @media (max-width: 1024px) {
+        body {
+          padding: 1.5rem;
+        }
+
+        .editor-card {
+          padding: 2rem;
+        }
+      }
+
+      /* Mobile */
+      @media (max-width: 768px) {
+        body {
+          align-items: flex-start;
+          padding: 1.25rem;
+        }
+
+        .editor-card {
+          padding: 1.5rem;
+          border-radius: 16px;
+        }
+
+        textarea {
+          min-height: 160px;
+        }
+
+        .actions {
+          flex-direction: column;
+        }
+
+        .btn-primary,
+        .btn-cancel {
+          width: 100%;
+        }
+      }
+
+      /* Small Mobile */
+      @media (max-width: 480px) {
+        .header h1 {
+          font-size: 1.25rem;
+        }
+
+        .header p {
+          font-size: 0.85rem;
+        }
+
+        input,
+        textarea {
+          padding: 0.85rem;
+        }
+
+        .btn-primary,
+        .btn-cancel {
+          padding: 0.85rem;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="editor-card">
+      <div class="header">
+        <h1>Edit Note</h1>
+        <p>Update your note details below</p>
+      </div>
+
+      <form id="form">
+        <div class="form-group">
+          <label for="title">Title</label>
+          <input type="text" id="title" required />
+        </div>
+
+        <div class="form-group">
+          <label for="content">Content</label>
+          <textarea id="content" required></textarea>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn-cancel" onclick="goBack()">
+            Cancel
+          </button>
+          <button type="submit" class="btn-primary">Update Note</button>
+        </div>
+      </form>
+
+      <div id="status"></div>
+    </div>
+
+    <script>
+      const API_BASE = "http://localhost:3000/api";
+      const params = new URLSearchParams(window.location.search);
+      const noteId = params.get("id");
+
+      const titleEl = document.getElementById("title");
+      const contentEl = document.getElementById("content");
+      const statusEl = document.getElementById("status");
+
+      if (!noteId) {
+        statusEl.innerText = "Invalid note ID.";
+      }
+
+      /* Load Single Note */
+      const loadNote = async () => {
+        try {
+          const res = await fetch(`${API_BASE}/notes/${noteId}`);
+          if (!res.ok) {
+            statusEl.innerText = "Note not found.";
+            return;
+          }
+
+          const note = await res.json();
+          titleEl.value = note.title;
+          contentEl.value = note.content;
+        } catch {
+          statusEl.innerText = "Server error while loading note.";
+        }
+      };
+
+      loadNote();
+
+      /* Update Note */
+      document.getElementById("form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const res = await fetch(`${API_BASE}/notes/${noteId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: titleEl.value,
+            content: contentEl.value,
+          }),
+        });
+
+        if (res.ok) {
+          statusEl.innerText = "Note updated successfully!";
+          setTimeout(() => {
+            window.location.href = "index.html";
+          }, 1000);
+        } else {
+          statusEl.innerText = "Failed to update note.";
+        }
+      });
+
+      /* Cancel */
+      function goBack() {
+        window.location.href = "index.html";
+      }
+    </script>
+  </body>
+</html>
